@@ -1,6 +1,8 @@
 #ifndef NGLSCENE_H_
 #define NGLSCENE_H_
 #include <ngl/Vec3.h>
+#include <ngl/Mat4.h>
+#include <ngl/AbstractVAO.h>
 #include "WindowParams.h"
 // this must be included after NGL includes else we get a clash with gl libs
 #include <QOpenGLWindow>
@@ -56,6 +58,15 @@ private:
     WinParams m_win;
     /// position for our model
     ngl::Vec3 m_modelPos;
+    /// view matrix
+    ngl::Mat4 m_view;
+    /// projection matrix
+    ngl::Mat4 m_project;
+    /// VAO for the lines
+    std::unique_ptr<ngl::AbstractVAO> m_lineVAO;
+
+    /// load matrix to shader
+    void loadMatrixToShader(const ngl::Mat4 &_tx, const ngl::Vec4 &_color);
 
 };
 

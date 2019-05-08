@@ -3,12 +3,15 @@
 
 #include "NGLScene.h"
 #include <ngl/NGLInit.h>
+#include <ngl/ShaderLib.h>
+#include <ngl/SimpleVAO.h>
+#include <ngl/VAOFactory.h>
 #include <iostream>
 
 NGLScene::NGLScene()
 {
   // re-size the widget to that of the parent (in this case the GLFrame passed in on construction)
-  setTitle("Blank NGL");
+  setTitle("Dynamic A-Star Demo");
 }
 
 
@@ -23,6 +26,9 @@ void NGLScene::resizeGL(int _w , int _h)
 {
   m_win.width  = static_cast<int>( _w * devicePixelRatio() );
   m_win.height = static_cast<int>( _h * devicePixelRatio() );
+  //field of view, aspect ratio, near clipping plane, far clipping plane
+  m_project = ngl::perspective(45.0f, static_cast<float>(_w/_h),
+                             0.5f, 200.0f);
 }
 
 
@@ -32,12 +38,21 @@ void NGLScene::initializeGL()
   // be done once we have a valid GL context but before we call any GL commands. If we dont do
   // this everything will crash
   ngl::NGLInit::instance();
-  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);			   // Grey Background
+  glClearColor(0.6f, 0.6f, 0.6f, 1.0f);			   // Grey Background
   // enable depth testing for drawing
   glEnable(GL_DEPTH_TEST);
   // enable multisampling for smoother drawing
   glEnable(GL_MULTISAMPLE);
 
+  // load shaders
+  ngl::ShaderLib *shader = ngl::ShaderLib::instance();
+  shader->loadShader("lineShader", "shaders/lineVertex.glsl",
+                   "shaders/lineFragment.glsl");
+  //set the camera
+  m_view = ngl::lookAt({0.0f, 20.0f, 20.0f}, ngl::Vec3::zero(), ngl::Vec3::up());
+
+  //make a simple vao for the lines
+  m_lineVAO = ngl::VAOFactory::createVAO(ngl::simpleVAO, GL_LINES);
 }
 
 
@@ -47,7 +62,27 @@ void NGLScene::paintGL()
   // clear the screen and depth buffer
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glViewport(0,0,m_win.width,m_win.height);
+  // draw lines
+  // test line list
+  std::vector<ngl::Vec3> lines = {ngl::Vec3(0.0f), ngl::Vec3(5.0f)};
 
+  m_lineVAO->bind();
+  m_lineVAO->setData(ngl::SimpleVAO::VertexData(lines.size()*sizeof(ngl::Vec3),
+                                          lines[0].m_x));
+  m_lineVAO->setVertexAttributePointer(0, 3, GL_FLOAT, sizeof(ngl::Vec3), 0);
+  m_lineVAO->setNumIndices(lines.size());
+  loadMatrixToShader(ngl::Mat4(1.0f), ngl::Vec4(1.0f, 0.0f, 0.0f, 1.0f));
+  m_lineVAO->draw();
+  m_lineVAO->unbind();
+
+}
+
+void NGLScene::loadMatrixToShader(const ngl::Mat4 &_tx, const ngl::Vec4 &_color)
+{
+    ngl::ShaderLib *shader = ngl::ShaderLib::instance();
+    shader->use("lineShader");
+    shader->setUniform("MVP", m_project * m_view * _tx);
+    shader->setUniform("vertColor", _color);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

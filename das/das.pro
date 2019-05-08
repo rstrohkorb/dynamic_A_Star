@@ -5,7 +5,7 @@ SOURCES+=src/main.cpp \
 HEADERS+= include/NGLScene.h \
           include/WindowParams.h
 
-# OTHER_FILES+= shaders/*.glsl
+OTHER_FILES+= shaders/*.glsl
 
 INCLUDEPATH+= include
 
