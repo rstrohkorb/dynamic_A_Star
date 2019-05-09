@@ -12,6 +12,17 @@ NGLScene::NGLScene()
 {
   // re-size the widget to that of the parent (in this case the GLFrame passed in on construction)
   setTitle("Dynamic A-Star Demo");
+  // Graph setup
+  std::vector<ngl::Vec3> points;
+  points.reserve(16);
+  for(size_t i = 0; i < 4; ++i)
+  {
+      for(size_t j = 0; j < 4; ++j)
+      {
+          points.push_back(ngl::Vec3(1.0f * i, 1.0f * j, 0.0f));
+      }
+  }
+  m_graph = Graph(points);
 }
 
 
@@ -62,7 +73,9 @@ void NGLScene::paintGL()
   // clear the screen and depth buffer
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glViewport(0,0,m_win.width,m_win.height);
-  // draw lines
+  // create line list from graph
+  // GRAPH RENDER FUNCTION
+  // QUERY WHICH POINTS ARE CONNECTED TO GIVEN POINT
   // test line list
   std::vector<ngl::Vec3> lines = {ngl::Vec3(0.0f), ngl::Vec3(5.0f)};
 

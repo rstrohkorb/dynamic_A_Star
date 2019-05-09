@@ -1,10 +1,7 @@
 TARGET=test
-SOURCES+= main.cpp
+SOURCES+= main.cpp \
+          ../das/src/Graph.cpp
 #          ../clothSim/src/Cloth.cpp \
-#          ../clothSim/src/MassPoint.cpp \
-#          ../clothSim/src/BVTree.cpp \
-#          ../clothSim/src/SphereBV.cpp \
-#          ../clothSim/src/SphereObj.cpp
 
 LIBS+= -lgtest
 INCLUDEPATH+= ../das/include

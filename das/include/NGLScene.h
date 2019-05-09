@@ -4,6 +4,7 @@
 #include <ngl/Mat4.h>
 #include <ngl/AbstractVAO.h>
 #include "WindowParams.h"
+#include "Graph.h"
 // this must be included after NGL includes else we get a clash with gl libs
 #include <QOpenGLWindow>
 //----------------------------------------------------------------------------------------------------------------------
@@ -64,6 +65,8 @@ private:
     ngl::Mat4 m_project;
     /// VAO for the lines
     std::unique_ptr<ngl::AbstractVAO> m_lineVAO;
+    /// Graph
+    Graph m_graph;
 
     /// load matrix to shader
     void loadMatrixToShader(const ngl::Mat4 &_tx, const ngl::Vec4 &_color);
