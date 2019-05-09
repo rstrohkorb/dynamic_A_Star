@@ -32,36 +32,65 @@ Graph::Graph(std::vector<ngl::Vec3> _points)
             m_graph[n].es.push_back(e);
         }
     }
+    // now add reverse edges to make sure we're all bidirectional in this graph
+    for(size_t n = 0; n < m_graph.size(); ++n)
+    {
+        // loop through neighbor list and make sure we're in their neighbor list
+        for(auto e : m_graph[n].es)
+        {
+            // grab edgeID list
+            auto nEdges = m_graph[e.n].edgeId();
+            // add ourselves if we're not there
+            if(std::find(nEdges.begin(), nEdges.end(), n) == nEdges.end())
+            {
+                Edge newEdge(n, (_points[n] - _points[e.n]).lengthSquared());
+                m_graph[e.n].es.push_back(newEdge);
+            }
+        }
+    }
 }
 
-std::vector<size_t> Graph::edges(size_t node) const
+std::vector<size_t> Graph::edges(const size_t _node) const
 {
     std::vector<size_t> edg;
-    if(node < m_graph.size())
+    if(_node < m_graph.size())
     {
-        for(auto e : m_graph[node].es)
-        {
-            edg.push_back(e.n);
-        }
+        edg = m_graph[_node].edgeId();
     }
     return edg;
 }
 
-size_t Graph::find_index(std::vector<float> list, float item, std::vector<size_t> eId) const
+std::vector<ngl::Vec3> Graph::render() const
 {
-    for(size_t i = 0; i < list.size(); ++i)
+    std::vector<ngl::Vec3> lines;
+    // Loop through and dump everything
+    // For now, we're not going to try to avoid bidirectional duplicates
+    for(size_t n = 0; n < m_graph.size(); ++n)
     {
-        if(FCompare(list[i], item))
+        for(auto e : m_graph[n].es)
+        {
+            lines.push_back(m_graph[n].p);
+            lines.push_back(m_graph[e.n].p);
+        }
+    }
+    return lines;
+}
+
+size_t Graph::find_index(std::vector<float> _list, float _item, std::vector<size_t> _eId) const
+{
+    for(size_t i = 0; i < _list.size(); ++i)
+    {
+        if(FCompare(_list[i], _item))
         {
             // Protect against same length
-            if(std::find(eId.begin(), eId.end(), i) == eId.end())
+            if(std::find(_eId.begin(), _eId.end(), i) == _eId.end())
             {
                 return i;
             }
         }
     }
     // out of index if not present (shouldn't happen)
-    return list.size();
+    return _list.size();
 }
 
 std::vector<size_t> Graph::Node::edgeId() const

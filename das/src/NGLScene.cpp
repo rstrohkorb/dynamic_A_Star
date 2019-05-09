@@ -15,9 +15,9 @@ NGLScene::NGLScene()
   // Graph setup
   std::vector<ngl::Vec3> points;
   points.reserve(16);
-  for(size_t i = 0; i < 4; ++i)
+  for(size_t i = 0; i < 10; ++i)
   {
-      for(size_t j = 0; j < 4; ++j)
+      for(size_t j = 0; j < 10; ++j)
       {
           points.push_back(ngl::Vec3(1.0f * i, 1.0f * j, 0.0f));
       }
@@ -38,8 +38,9 @@ void NGLScene::resizeGL(int _w , int _h)
   m_win.width  = static_cast<int>( _w * devicePixelRatio() );
   m_win.height = static_cast<int>( _h * devicePixelRatio() );
   //field of view, aspect ratio, near clipping plane, far clipping plane
-  m_project = ngl::perspective(45.0f, static_cast<float>(_w/_h),
-                             0.5f, 200.0f);
+  float s = 0.01f;
+  m_project = ngl::ortho(_w * -s, _w * s, _h * -s, _h * s, 0.5f, 100.0f);
+  //m_project = ngl::perspective(90.0f, static_cast<float>(_w/_h), 0.5f, 200.0f);
 }
 
 
@@ -74,11 +75,8 @@ void NGLScene::paintGL()
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glViewport(0,0,m_win.width,m_win.height);
   // create line list from graph
-  // GRAPH RENDER FUNCTION
-  // QUERY WHICH POINTS ARE CONNECTED TO GIVEN POINT
-  // test line list
-  std::vector<ngl::Vec3> lines = {ngl::Vec3(0.0f), ngl::Vec3(5.0f)};
-
+  auto lines = m_graph.render();
+  // render out the lines
   m_lineVAO->bind();
   m_lineVAO->setData(ngl::SimpleVAO::VertexData(lines.size()*sizeof(ngl::Vec3),
                                           lines[0].m_x));

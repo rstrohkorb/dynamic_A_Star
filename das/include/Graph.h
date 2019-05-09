@@ -12,9 +12,11 @@ public:
     Graph()=default;
     Graph(std::vector<ngl::Vec3> _points);
 
-    size_t size() const { return m_graph.size(); }
-    size_t degree() const { return m_degree; }
-    std::vector<size_t> edges(size_t node) const;
+    size_t size() const { return m_graph.size(); }          // returns number of nodes in graph
+    size_t degree() const { return m_degree; }              // returns minimum degree of graph
+    std::vector<size_t> edges(const size_t _node) const;    // returns edges connected to the input edge
+    std::vector<ngl::Vec3> render() const;                  // returns list of positions for GL_LINES
+
 private:
     // Private struct Edge, for keeping track of weights
     struct Edge
@@ -42,7 +44,7 @@ private:
     size_t m_degree = 3;
 
     // PRIVATE FUNCTIONS
-    size_t find_index(std::vector<float> list, float item, std::vector<size_t> eId) const;
+    size_t find_index(std::vector<float> _list, float _item, std::vector<size_t> _eId) const;
 };
 
 #endif

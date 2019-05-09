@@ -35,9 +35,35 @@ TEST(Graph, userctor)
     // feed to graph
     Graph g(points);
     EXPECT_TRUE(g.size() == 16);
+    // detect edge correctness
     auto zedges = g.edges(0);
     EXPECT_TRUE(zedges.size() == 3);
     EXPECT_TRUE(zedges[0] == 1);
     EXPECT_TRUE(zedges[1] == 4);
     EXPECT_TRUE(zedges[2] == 5);
+    auto oedges = g.edges(5);
+    EXPECT_TRUE(oedges.size() == 5);
+    EXPECT_TRUE(oedges[0] == 1);
+    EXPECT_TRUE(oedges[1] == 4);
+    EXPECT_TRUE(oedges[2] == 6);
+    EXPECT_TRUE(oedges[3] == 0);
+    EXPECT_TRUE(oedges[4] == 9);
+}
+
+TEST(Graph, render)
+{
+    // initialize graph
+    std::vector<ngl::Vec3> points;
+    points.reserve(16);
+    for(size_t i = 0; i < 4; ++i)
+    {
+        for(size_t j = 0; j < 4; ++j)
+        {
+            points.push_back(ngl::Vec3(1.0f * i, 1.0f * j, 0.0f));
+        }
+    }
+    Graph g(points);
+    // render
+    auto lines = g.render();
+    EXPECT_TRUE(lines.size() == 112);
 }
