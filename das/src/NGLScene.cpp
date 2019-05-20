@@ -23,6 +23,8 @@ NGLScene::NGLScene()
       }
   }
   m_graph = Graph(points);
+
+  m_graph.aStar(0, 15);
 }
 
 

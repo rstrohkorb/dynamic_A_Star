@@ -50,6 +50,26 @@ TEST(Graph, userctor)
     EXPECT_TRUE(oedges[4] == 9);
 }
 
+TEST(Graph, removeEdge)
+{
+    // initialize graph
+    std::vector<ngl::Vec3> points;
+    points.reserve(16);
+    for(size_t i = 0; i < 4; ++i)
+    {
+        for(size_t j = 0; j < 4; ++j)
+        {
+            points.push_back(ngl::Vec3(1.0f * i, 1.0f * j, 0.0f));
+        }
+    }
+    Graph g(points);
+    // remove some edges
+    g.removeEdge(0, 5);
+    EXPECT_FALSE(g.isEdge(0, 5));
+    g.removeEdge(5, 6);
+    EXPECT_FALSE(g.isEdge(5, 6));
+}
+
 TEST(Graph, render)
 {
     // initialize graph
@@ -66,4 +86,39 @@ TEST(Graph, render)
     // render
     auto lines = g.render();
     EXPECT_TRUE(lines.size() == 112);
+}
+
+TEST(Graph, Astar)
+{
+    // initialize graph
+    std::vector<ngl::Vec3> points;
+    points.reserve(16);
+    for(size_t i = 0; i < 4; ++i)
+    {
+        for(size_t j = 0; j < 4; ++j)
+        {
+            points.push_back(ngl::Vec3(1.0f * i, 1.0f * j, 0.0f));
+        }
+    }
+    Graph g(points);
+    // run Astar on fully connected graph, check the path
+    auto path = g.aStar(0, 15);
+    EXPECT_TRUE(path.size() == 4);
+    EXPECT_TRUE(path[0] == ngl::Vec3(1.0f, 1.0f, 0.0f));
+    EXPECT_TRUE(path[1] == ngl::Vec3(1.0f, 2.0f, 0.0f));
+    EXPECT_TRUE(path[2] == ngl::Vec3(2.0f, 2.0f, 0.0f));
+    EXPECT_TRUE(path[3] == ngl::Vec3(3.0f, 3.0f, 0.0f));
+    // remove some edges
+    g.removeEdge(10, 15);
+    g.removeEdge(10, 14);
+    g.removeEdge(10, 11);
+    // run astar again, check the path
+    auto path2 = g.aStar(0, 15);
+    std::cout<<"AStar path: ";
+    for(auto p : path2)
+    {
+        std::cout<<"("<<p.m_x<<", "<<p.m_y<<", "<<p.m_z<<"); ";
+    }
+    std::cout<<'\n';
+
 }

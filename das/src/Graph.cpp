@@ -1,5 +1,7 @@
 #include <utility>
 #include <algorithm>
+#include <queue>
+#include <iostream>
 #include <ngl/Vec3.h>
 #include "Graph.h"
 
@@ -60,6 +62,20 @@ std::vector<size_t> Graph::edges(const size_t _node) const
     return edg;
 }
 
+bool Graph::isEdge(size_t _n1, size_t _n2)
+{
+    // Assumes bidirectional completeness - doesn't check n2's edges
+    if(_n1 < m_graph.size() && _n2 < m_graph.size())
+    {
+        Edge en2(_n2, 0.0f);
+        if(std::find(m_graph[_n1].es.begin(), m_graph[_n1].es.end(), en2) != m_graph[_n1].es.end())
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 std::vector<ngl::Vec3> Graph::render() const
 {
     std::vector<ngl::Vec3> lines;
@@ -74,6 +90,85 @@ std::vector<ngl::Vec3> Graph::render() const
         }
     }
     return lines;
+}
+
+void Graph::removeEdge(size_t _n1, size_t _n2)
+{
+    // Go through _n1's edge list and remove _n2
+    for(size_t i = 0; i < m_graph[_n1].es.size(); ++i)
+    {
+        Edge en2(_n2, 0.0f);
+        auto pos = std::find(m_graph[_n1].es.begin(), m_graph[_n1].es.end(), en2);
+        m_graph[_n1].es.erase(pos);
+    }
+    // Go through _n2's edge list and remove _n1
+    for(size_t i = 0; i < m_graph[_n2].es.size(); ++i)
+    {
+        Edge en1(_n1, 0.0f);
+        auto pos = std::find(m_graph[_n2].es.begin(), m_graph[_n2].es.end(), en1);
+        m_graph[_n2].es.erase(pos);
+    }
+}
+
+std::vector<ngl::Vec3> Graph::aStar(size_t _self, size_t _goal)
+{
+    float initVal = 1000.0f;
+    // node you came from, currently most effective
+    std::vector<size_t> cameFrom(m_graph.size(), m_graph.size());
+    cameFrom[_self] = _self;
+    // gscore - for each node, cost of getting from start to the node
+    std::vector<float> gscore(m_graph.size(), initVal);
+    gscore[_self] = 0.0f;
+    // fscore - cost of getting from start to goal through this node
+    std::vector<float> fscore(m_graph.size(), initVal);
+    fscore[_self] = heuristic_cost_estimate(_self, _goal);
+    // open priority queue for processing nodes
+    std::priority_queue<ScoreSort, std::vector<ScoreSort>, std::greater<ScoreSort>> open;
+    ScoreSort selfscore(_self, fscore[_self]);
+    open.push(selfscore);
+
+    // loop
+    while(!open.empty())
+    {
+        auto current = open.top();
+        // if we've reached the goal, stop the loop
+        if(current.n == _goal)
+        {
+            return reconstructPath(cameFrom, current.n);
+        }
+        // remove top value - we've processed
+        open.pop();
+        // if this node's fscore doesn't match what's in the list, discard
+        if(!(FCompare(current.fscore, fscore[current.n])))
+        {
+            continue;
+        }
+
+        // loop through current's neighbors and add to open
+        for(auto e : m_graph[current.n].es)
+        {
+            // tentative distance measurement between us and neighbor
+            auto temp_gscore = gscore[current.n] + e.w;
+
+            // don't do anything if our neighbor's gscore is already better
+            if((temp_gscore > gscore[e.n]) || FCompare(temp_gscore, gscore[e.n]))
+            {
+                continue;
+            }
+
+            // update values, since this is currently the best path
+            cameFrom[e.n] = current.n;
+            gscore[e.n] = temp_gscore;
+            fscore[e.n] = gscore[e.n] + heuristic_cost_estimate(e.n, _goal);
+
+            // add neighbor to open set
+            ScoreSort ss(e.n, fscore[e.n]);
+            open.push(ss);
+        }
+    }
+
+    // we should never reach this line
+    return reconstructPath(cameFrom, _goal);
 }
 
 size_t Graph::find_index(std::vector<float> _list, float _item, std::vector<size_t> _eId) const
@@ -91,6 +186,32 @@ size_t Graph::find_index(std::vector<float> _list, float _item, std::vector<size
     }
     // out of index if not present (shouldn't happen)
     return _list.size();
+}
+
+float Graph::heuristic_cost_estimate(size_t _self, size_t _goal)
+{
+    // distance between the two nodes
+    return (m_graph[_goal].p - m_graph[_self].p).length();
+}
+
+std::vector<ngl::Vec3> Graph::reconstructPath(std::vector<size_t> _cameFrom, size_t _current)
+{
+    std::cout<<"Came from : ";
+    for(auto c : _cameFrom)
+    {
+        std::cout<<c<<", ";
+    }
+    std::cout<<'\n';
+    std::vector<ngl::Vec3> path;
+    auto ncf = _current;
+    while(_cameFrom[ncf] != ncf)
+    {
+        // insert position
+        path.insert(path.begin(), m_graph[ncf].p);
+        // update ncf
+        ncf = _cameFrom[ncf];
+    }
+    return path;
 }
 
 std::vector<size_t> Graph::Node::edgeId() const
