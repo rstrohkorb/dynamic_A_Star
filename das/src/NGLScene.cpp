@@ -23,8 +23,7 @@ NGLScene::NGLScene()
       }
   }
   m_graph = Graph(points);
-
-  m_graph.aStar(0, 15);
+  m_path = m_graph.aStar(0, 99);
 }
 
 
@@ -67,6 +66,9 @@ void NGLScene::initializeGL()
 
   //make a simple vao for the lines
   m_lineVAO = ngl::VAOFactory::createVAO(ngl::simpleVAO, GL_LINES);
+
+  //make a simple vao for the particle/sphere object
+  m_sphereVAO = ngl::VAOFactory::createVAO(ngl::simpleVAO, GL_TRIANGLE_STRIP);
 }
 
 

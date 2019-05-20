@@ -94,19 +94,16 @@ std::vector<ngl::Vec3> Graph::render() const
 
 void Graph::removeEdge(size_t _n1, size_t _n2)
 {
-    // Go through _n1's edge list and remove _n2
-    for(size_t i = 0; i < m_graph[_n1].es.size(); ++i)
+    if(this->isEdge(_n1, _n2))
     {
+        // Go through _n1's edge list and remove _n2
         Edge en2(_n2, 0.0f);
-        auto pos = std::find(m_graph[_n1].es.begin(), m_graph[_n1].es.end(), en2);
-        m_graph[_n1].es.erase(pos);
-    }
-    // Go through _n2's edge list and remove _n1
-    for(size_t i = 0; i < m_graph[_n2].es.size(); ++i)
-    {
+        auto posn2 = std::find(m_graph[_n1].es.begin(), m_graph[_n1].es.end(), en2);
+        m_graph[_n1].es.erase(posn2);
+        // Go through _n2's edge list and remove _n1
         Edge en1(_n1, 0.0f);
-        auto pos = std::find(m_graph[_n2].es.begin(), m_graph[_n2].es.end(), en1);
-        m_graph[_n2].es.erase(pos);
+        auto posn1 = std::find(m_graph[_n2].es.begin(), m_graph[_n2].es.end(), en1);
+        m_graph[_n2].es.erase(posn1);
     }
 }
 
@@ -196,12 +193,6 @@ float Graph::heuristic_cost_estimate(size_t _self, size_t _goal)
 
 std::vector<ngl::Vec3> Graph::reconstructPath(std::vector<size_t> _cameFrom, size_t _current)
 {
-    std::cout<<"Came from : ";
-    for(auto c : _cameFrom)
-    {
-        std::cout<<c<<", ";
-    }
-    std::cout<<'\n';
     std::vector<ngl::Vec3> path;
     auto ncf = _current;
     while(_cameFrom[ncf] != ncf)

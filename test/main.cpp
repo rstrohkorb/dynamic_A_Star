@@ -105,7 +105,7 @@ TEST(Graph, Astar)
     auto path = g.aStar(0, 15);
     EXPECT_TRUE(path.size() == 4);
     EXPECT_TRUE(path[0] == ngl::Vec3(1.0f, 1.0f, 0.0f));
-    EXPECT_TRUE(path[1] == ngl::Vec3(1.0f, 2.0f, 0.0f));
+    EXPECT_TRUE(path[1] == ngl::Vec3(2.0f, 1.0f, 0.0f));
     EXPECT_TRUE(path[2] == ngl::Vec3(2.0f, 2.0f, 0.0f));
     EXPECT_TRUE(path[3] == ngl::Vec3(3.0f, 3.0f, 0.0f));
     // remove some edges
@@ -114,11 +114,10 @@ TEST(Graph, Astar)
     g.removeEdge(10, 11);
     // run astar again, check the path
     auto path2 = g.aStar(0, 15);
-    std::cout<<"AStar path: ";
-    for(auto p : path2)
-    {
-        std::cout<<"("<<p.m_x<<", "<<p.m_y<<", "<<p.m_z<<"); ";
-    }
-    std::cout<<'\n';
-
+    EXPECT_TRUE(path2.size() == 5);
+    EXPECT_TRUE(path2[0] == ngl::Vec3(1.0f, 1.0f, 0.0f));
+    EXPECT_TRUE(path2[1] == ngl::Vec3(2.0f, 1.0f, 0.0f));
+    EXPECT_TRUE(path2[2] == ngl::Vec3(3.0f, 1.0f, 0.0f));
+    EXPECT_TRUE(path2[3] == ngl::Vec3(3.0f, 2.0f, 0.0f));
+    EXPECT_TRUE(path2[4] == ngl::Vec3(3.0f, 3.0f, 0.0f));
 }

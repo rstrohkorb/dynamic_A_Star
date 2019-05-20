@@ -63,10 +63,12 @@ private:
     ngl::Mat4 m_view;
     /// projection matrix
     ngl::Mat4 m_project;
-    /// VAO for the lines
+    /// VAOS
     std::unique_ptr<ngl::AbstractVAO> m_lineVAO;
+    std::unique_ptr<ngl::AbstractVAO> m_sphereVAO;
     /// Graph
     Graph m_graph;
+    std::vector<ngl::Vec3> m_path;
 
     /// load matrix to shader
     void loadMatrixToShader(const ngl::Mat4 &_tx, const ngl::Vec4 &_color);
