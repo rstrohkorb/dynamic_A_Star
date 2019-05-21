@@ -10,11 +10,13 @@ class Graph
 {
 public:
     Graph()=default;
-    Graph(std::vector<ngl::Vec3> _points);
+    Graph(std::vector<ngl::Vec3> _points, size_t _degree);
 
     size_t size() const { return m_graph.size(); }          // returns number of nodes in graph
     size_t degree() const { return m_degree; }              // returns minimum degree of graph
-    std::vector<size_t> edges(const size_t _node) const;    // returns edges connected to the input edge
+    ngl::Vec3 pos(const size_t _node) const
+            { return m_graph[_node].p; }                    // returns position of the input node
+    std::vector<size_t> edges(const size_t _node) const;    // returns edges connected to the input node
     bool isEdge(size_t _n1, size_t _n2);                    // returns true if there is an edge between the input nodes
     std::vector<ngl::Vec3> render() const;                  // returns list of positions for GL_LINES
 

@@ -1,6 +1,7 @@
 #ifndef NGLSCENE_H_
 #define NGLSCENE_H_
 #include <ngl/Vec3.h>
+#include <ngl/Vec2.h>
 #include <ngl/Mat4.h>
 #include <ngl/AbstractVAO.h>
 #include "WindowParams.h"
@@ -54,6 +55,29 @@ private:
     //----------------------------------------------------------------------------------------------------------------------
     void keyPressEvent(QKeyEvent *_event) override;
     //----------------------------------------------------------------------------------------------------------------------
+    /// @brief this method is called every time a mouse is moved
+    /// @param _event the Qt Event structure
+    //----------------------------------------------------------------------------------------------------------------------
+    void mouseMoveEvent (QMouseEvent * _event ) override;
+    //----------------------------------------------------------------------------------------------------------------------
+    /// @brief this method is called everytime the mouse button is pressed
+    /// inherited from QObject and overridden here.
+    /// @param _event the Qt Event structure
+    //----------------------------------------------------------------------------------------------------------------------
+    void mousePressEvent ( QMouseEvent *_event) override;
+    //----------------------------------------------------------------------------------------------------------------------
+    /// @brief this method is called everytime the mouse button is released
+    /// inherited from QObject and overridden here.
+    /// @param _event the Qt Event structure
+    //----------------------------------------------------------------------------------------------------------------------
+    void mouseReleaseEvent ( QMouseEvent *_event ) override;
+
+    //----------------------------------------------------------------------------------------------------------------------
+    /// @brief this method is called everytime the mouse wheel is moved
+    /// inherited from QObject and overridden here.
+    /// @param _event the Qt Event structure
+    //----------------------------------------------------------------------------------------------------------------------
+    void wheelEvent( QWheelEvent *_event) override;
 
     /// @brief windows parameters for mouse control etc.
     WinParams m_win;
@@ -92,10 +116,16 @@ private:
     };
     /// store the particles
     std::vector<Particle> m_particles;
-    /// animate the particles
+    /// particle handlers
+    void createParticle();
     void animateParticles();
-    /// prune finished particles
     void prune();
+
+    /// graph construction methods
+    void makeGraph_2Dgrid(ngl::Vec2 _bl, ngl::Vec2 _tr, size_t _h, size_t _w);
+    void makeGraph_3Dgrid(ngl::Vec3 _bl, ngl::Vec3 _tr, size_t _h, size_t _w, size_t _d);
+    void makeGraph_2Drand(ngl::Vec2 _bl, ngl::Vec2 _tr, size_t _n, size_t _degree);
+    void makeGraph_3Drand(ngl::Vec3 _bl, ngl::Vec3 _tr, size_t _n, size_t _degree);
 
 };
 

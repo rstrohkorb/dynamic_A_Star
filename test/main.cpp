@@ -33,8 +33,10 @@ TEST(Graph, userctor)
         }
     }
     // feed to graph
-    Graph g(points);
+    Graph g(points, 3);
     EXPECT_TRUE(g.size() == 16);
+    EXPECT_TRUE(g.pos(0) == ngl::Vec3(0.0f));
+    EXPECT_TRUE(g.pos(15) == ngl::Vec3(3.0f, 3.0f, 0.0f));
     // detect edge correctness
     auto zedges = g.edges(0);
     EXPECT_TRUE(zedges.size() == 3);
@@ -62,7 +64,7 @@ TEST(Graph, removeEdge)
             points.push_back(ngl::Vec3(1.0f * i, 1.0f * j, 0.0f));
         }
     }
-    Graph g(points);
+    Graph g(points, 3);
     // remove some edges
     g.removeEdge(0, 5);
     EXPECT_FALSE(g.isEdge(0, 5));
@@ -82,7 +84,7 @@ TEST(Graph, render)
             points.push_back(ngl::Vec3(1.0f * i, 1.0f * j, 0.0f));
         }
     }
-    Graph g(points);
+    Graph g(points, 3);
     // render
     auto lines = g.render();
     EXPECT_TRUE(lines.size() == 112);
@@ -100,7 +102,7 @@ TEST(Graph, Astar)
             points.push_back(ngl::Vec3(1.0f * i, 1.0f * j, 0.0f));
         }
     }
-    Graph g(points);
+    Graph g(points, 3);
     // run Astar on fully connected graph, check the path
     auto path = g.aStar(0, 15);
     EXPECT_TRUE(path.size() == 4);

@@ -1,7 +1,8 @@
 TARGET=das
 SOURCES+=src/main.cpp \
          src/NGLScene.cpp \
-         src/Graph.cpp
+         src/Graph.cpp \
+         src/NGLSceneMouseControls.cpp
 
 HEADERS+= include/NGLScene.h \
           include/WindowParams.h \

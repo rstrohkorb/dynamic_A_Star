@@ -5,7 +5,7 @@
 #include <ngl/Vec3.h>
 #include "Graph.h"
 
-Graph::Graph(std::vector<ngl::Vec3> _points)
+Graph::Graph(std::vector<ngl::Vec3> _points, size_t _degree) : m_degree(_degree)
 {
     // allocate graph
     m_graph.reserve(_points.size());
@@ -28,7 +28,7 @@ Graph::Graph(std::vector<ngl::Vec3> _points)
         std::vector<float> sorted_weights(weights);
         std::sort(sorted_weights.begin(), sorted_weights.end());
         // locate sorted element and store - skip first one, that's us
-        for(size_t wi = 1; wi < 4; ++wi)
+        for(size_t wi = 1; wi < m_degree + 1; ++wi)
         {
             Edge e(find_index(weights, sorted_weights[wi], m_graph[n].edgeId()), sorted_weights[wi]);
             m_graph[n].es.push_back(e);
