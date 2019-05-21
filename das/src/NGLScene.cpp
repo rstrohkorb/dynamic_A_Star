@@ -10,21 +10,15 @@
 #include <ngl/VAOFactory.h>
 #include <iostream>
 
-NGLScene::NGLScene()
+NGLScene::NGLScene(QWidget *_parent )
 {
-  // re-size the widget to that of the parent (in this case the GLFrame passed in on construction)
-  setTitle("Dynamic A-Star Demo");
-  // Graph setup
-  //makeGraph_2Dgrid(ngl::Vec2(0.0f, 0.0f), ngl::Vec2(10.0f, 10.0f), 10, 10);
-  //makeGraph_3Dgrid(ngl::Vec3(-5.0f), ngl::Vec3(5.0f), 10, 10, 10);
-  //makeGraph_2Drand(ngl::Vec2(0.0f, 0.0f), ngl::Vec2(10.0f, 10.0f), 300, 4);
-  makeGraph_3Drand(ngl::Vec3(-5.0f), ngl::Vec3(5.0f), 300, 3);
-
-  // create particle
-  createParticle();
-
-  // Starts timer, set every 10 ms
-  startTimer(10);
+    // set this widget to have the initial keyboard focus
+    setFocus();
+    // re-size the widget to that of the parent (in this case the GLFrame passed in on construction)
+    this->resize(_parent->size());
+    // initialize member variables
+    setGraphType(0);
+    m_goal = m_graph.size() - 1;
 }
 
 
@@ -98,32 +92,48 @@ void NGLScene::paintGL()
   m_lineVAO->draw();
   m_lineVAO->unbind();
   // render out the particles
-  ngl::Transformation tx;
-  auto *prim = ngl::VAOPrimitives::instance();
-  for(auto p : m_particles)
+  if(m_visParticles)
   {
-      tx.setPosition(p.pos);
-      loadMatrixToShader(mouseRotation * tx.getMatrix(), ngl::Vec4(0.0f, 1.0f, 0.0f, 1.0f));
-      prim->draw("sphere");
+      ngl::Transformation tx;
+      auto *prim = ngl::VAOPrimitives::instance();
+      for(auto p : m_particles)
+      {
+          tx.setPosition(p.pos);
+          loadMatrixToShader(mouseRotation * tx.getMatrix(), ngl::Vec4(0.0f, 1.0f, 0.0f, 1.0f));
+          prim->draw("sphere");
+      }
   }
-
 }
 
 void NGLScene::timerEvent(QTimerEvent *_event)
 {
+    m_timerId = _event->timerId();
     animateParticles();
     update();
 }
 
-void NGLScene::createParticle()
+void NGLScene::spawn()
+{
+    // check list completeness
+    if(m_particles.size() < m_numParticles)
+    {
+        // add particles
+        auto toAdd = m_numParticles - m_particles.size();
+        for(size_t i = 0; i < toAdd; ++i)
+        {
+            createParticle(m_goal);
+        }
+    }
+}
+
+void NGLScene::createParticle(size_t _goal)
 {
     // handle random start/goal
     ngl::Random *rng = ngl::Random::instance();
     size_t start = static_cast<size_t>(rng->randomPositiveNumber(m_graph.size()-1));
-    size_t goal = static_cast<size_t>(rng->randomPositiveNumber(m_graph.size()-1));
     // create a particle and load it up
-    Particle p(m_graph.pos(start), m_graph.pos(goal), 0.05f);
-    p.path = m_graph.aStar(start, goal);
+    Particle p(m_graph.pos(start), m_graph.pos(_goal), 0.05f);
+    p.path = m_graph.aStar(start, _goal);
     auto direction = p.path[0] - p.pos;
     direction.normalize();
     p.dir = direction;
@@ -154,6 +164,7 @@ void NGLScene::animateParticles()
         p.pos += direction * p.speed;
     }
     prune(); // cut off particles that have reached their goals
+    spawn(); // spawn in new particles up to m_numParticles
 }
 
 void NGLScene::prune()
@@ -169,6 +180,12 @@ void NGLScene::prune()
             ++it;
         }
     }
+}
+
+void NGLScene::resetParticles()
+{
+    m_particles.clear();
+    spawn();
 }
 
 void NGLScene::loadMatrixToShader(const ngl::Mat4 &_tx, const ngl::Vec4 &_color)
@@ -195,6 +212,7 @@ void NGLScene::makeGraph_2Dgrid(ngl::Vec2 _bl, ngl::Vec2 _tr, size_t _h, size_t 
         }
     }
     m_graph = Graph(points, 2);
+    resetParticles();
 }
 
 void NGLScene::makeGraph_3Dgrid(ngl::Vec3 _bl, ngl::Vec3 _tr, size_t _h, size_t _w, size_t _d)
@@ -217,6 +235,7 @@ void NGLScene::makeGraph_3Dgrid(ngl::Vec3 _bl, ngl::Vec3 _tr, size_t _h, size_t 
         }
     }
     m_graph = Graph(points, 3);
+    resetParticles();
 }
 
 void NGLScene::makeGraph_2Drand(ngl::Vec2 _bl, ngl::Vec2 _tr, size_t _n, size_t _degree)
@@ -234,6 +253,7 @@ void NGLScene::makeGraph_2Drand(ngl::Vec2 _bl, ngl::Vec2 _tr, size_t _n, size_t 
         points.push_back(p);
     }
     m_graph = Graph(points, _degree);
+    resetParticles();
 }
 
 void NGLScene::makeGraph_3Drand(ngl::Vec3 _bl, ngl::Vec3 _tr, size_t _n, size_t _degree)
@@ -252,6 +272,7 @@ void NGLScene::makeGraph_3Drand(ngl::Vec3 _bl, ngl::Vec3 _tr, size_t _n, size_t 
         points.push_back(p);
     }
     m_graph = Graph(points, _degree);
+    resetParticles();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -275,4 +296,44 @@ void NGLScene::keyPressEvent(QKeyEvent *_event)
   // finally update the GLWindow and re-draw
 
     update();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+void NGLScene::startSim()
+{
+    m_visParticles = true;
+    startTimer(10);
+}
+
+void NGLScene::stopSim()
+{
+    killTimer(m_timerId);
+}
+
+void NGLScene::setGraphType(int _i)
+{
+    // timer shouldn't be going while we switch graph types, turn off particles
+    killTimer(m_timerId);
+    m_visParticles = false;
+    // switch graph types
+    switch(_i)
+    {
+    case 0:
+        makeGraph_2Dgrid(ngl::Vec2(-5.0f, -5.0f), ngl::Vec2(5.0f, 5.0f), 10, 10); break;
+    case 1:
+        makeGraph_2Drand(ngl::Vec2(-5.0f, -5.0f), ngl::Vec2(5.0f, 5.0f), 100, 3); break;
+    case 2:
+        makeGraph_3Dgrid(ngl::Vec3(-5.0f), ngl::Vec3(5.0f), 10, 10, 10); break;
+    case 3:
+        makeGraph_3Drand(ngl::Vec3(-5.0f), ngl::Vec3(5.0f), 300, 3); break;
+    default: break;
+    }
+    // update gl window and redraw
+    update();
+}
+
+void NGLScene::resetGraph()
+{
+    // probably going to delete this
 }

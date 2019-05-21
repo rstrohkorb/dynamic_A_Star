@@ -6,8 +6,9 @@
 #include <ngl/AbstractVAO.h>
 #include "WindowParams.h"
 #include "Graph.h"
-// this must be included after NGL includes else we get a clash with gl libs
-#include <QOpenGLWindow>
+#include <QEvent>
+#include <QResizeEvent>
+#include <QOpenGLWidget>
 //----------------------------------------------------------------------------------------------------------------------
 /// @file NGLScene.h
 /// @brief this class inherits from the Qt OpenGLWindow and allows us to use NGL to draw OpenGL
@@ -21,14 +22,15 @@
 /// put in this file
 //----------------------------------------------------------------------------------------------------------------------
 
-class NGLScene : public QOpenGLWindow
+class NGLScene : public QOpenGLWidget
 {
+Q_OBJECT        // must include this if you use Qt signals/slots
   public:
     //----------------------------------------------------------------------------------------------------------------------
-    /// @brief ctor for our NGL drawing class
-    /// @param [in] parent the parent window to the class
+    /// @brief Constructor for GLWindow
+    /// @param [in] _parent the parent window to create the GL context in
     //----------------------------------------------------------------------------------------------------------------------
-    NGLScene();
+    NGLScene(QWidget *_parent );
     //----------------------------------------------------------------------------------------------------------------------
     /// @brief dtor must close down ngl and release OpenGL resources
     //----------------------------------------------------------------------------------------------------------------------
@@ -46,6 +48,13 @@ class NGLScene : public QOpenGLWindow
     /// @brief this is called everytime we resize the window
     //----------------------------------------------------------------------------------------------------------------------
     void resizeGL(int _w, int _h) override;
+
+public slots :
+    /// Functions for handling slots
+    void startSim();
+    void stopSim();
+    void setGraphType(int _i);
+    void resetGraph();
 
 private:
 
@@ -87,6 +96,8 @@ private:
     ngl::Mat4 m_view;
     /// projection matrix
     ngl::Mat4 m_project;
+    /// timerID, for starting/stopping timer
+    int m_timerId;
 
     // add a QT timer event
     void timerEvent(QTimerEvent *_event) override;
@@ -116,10 +127,15 @@ private:
     };
     /// store the particles
     std::vector<Particle> m_particles;
+    bool m_visParticles = false;
+    size_t m_numParticles = 10;
+    size_t m_goal = 0;
     /// particle handlers
-    void createParticle();
+    void spawn();
+    void createParticle(size_t _goal);
     void animateParticles();
     void prune();
+    void resetParticles();
 
     /// graph construction methods
     void makeGraph_2Dgrid(ngl::Vec2 _bl, ngl::Vec2 _tr, size_t _h, size_t _w);
