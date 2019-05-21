@@ -63,15 +63,39 @@ private:
     ngl::Mat4 m_view;
     /// projection matrix
     ngl::Mat4 m_project;
-    /// VAOS
+
+    // add a QT timer event
+    void timerEvent(QTimerEvent *_event) override;
+
+    /// VAO
     std::unique_ptr<ngl::AbstractVAO> m_lineVAO;
-    std::unique_ptr<ngl::AbstractVAO> m_sphereVAO;
     /// Graph
     Graph m_graph;
-    std::vector<ngl::Vec3> m_path;
 
     /// load matrix to shader
     void loadMatrixToShader(const ngl::Mat4 &_tx, const ngl::Vec4 &_color);
+
+    /// private struct for the particle animation data
+    struct Particle
+    {
+        ngl::Vec3 pos;
+        ngl::Vec3 goal;
+        std::vector<ngl::Vec3> path;
+        ngl::Vec3 dir;
+        float speed;
+
+        // constructors
+        Particle(ngl::Vec3 _pos, ngl::Vec3 _goal, std::vector<ngl::Vec3> _path, ngl::Vec3 _dir, float _speed) :
+            pos(_pos), goal(_goal), path(_path), dir(_dir), speed(_speed) {;}
+        Particle(ngl::Vec3 _pos, ngl::Vec3 _goal, float _speed) : pos(_pos), goal(_goal), speed(_speed) {;}
+        Particle()=default;
+    };
+    /// store the particles
+    std::vector<Particle> m_particles;
+    /// animate the particles
+    void animateParticles();
+    /// prune finished particles
+    void prune();
 
 };
 

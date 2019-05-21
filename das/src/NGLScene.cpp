@@ -5,6 +5,7 @@
 #include <ngl/NGLInit.h>
 #include <ngl/ShaderLib.h>
 #include <ngl/SimpleVAO.h>
+#include <ngl/Transformation.h>
 #include <ngl/VAOFactory.h>
 #include <iostream>
 
@@ -23,7 +24,17 @@ NGLScene::NGLScene()
       }
   }
   m_graph = Graph(points);
-  m_path = m_graph.aStar(0, 99);
+
+  // create a particle and load it up
+  Particle p(ngl::Vec3(0.0f), ngl::Vec3(10.0f, 10.0f, 0.0f), 0.05f);
+  p.path = m_graph.aStar(0, 99);
+  auto direction = p.path[0] - p.pos;
+  direction.normalize();
+  p.dir = direction;
+  m_particles.push_back(p);
+
+  // Starts timer, set every 10 ms
+  startTimer(10);
 }
 
 
@@ -67,8 +78,8 @@ void NGLScene::initializeGL()
   //make a simple vao for the lines
   m_lineVAO = ngl::VAOFactory::createVAO(ngl::simpleVAO, GL_LINES);
 
-  //make a simple vao for the particle/sphere object
-  m_sphereVAO = ngl::VAOFactory::createVAO(ngl::simpleVAO, GL_TRIANGLE_STRIP);
+  //make a primitive sphere
+  ngl::VAOPrimitives::instance()->createSphere("sphere", 0.3f, 40);
 }
 
 
@@ -89,7 +100,63 @@ void NGLScene::paintGL()
   loadMatrixToShader(ngl::Mat4(1.0f), ngl::Vec4(1.0f, 0.0f, 0.0f, 1.0f));
   m_lineVAO->draw();
   m_lineVAO->unbind();
+  // render out the particles
+  ngl::Transformation tx;
+  auto *prim = ngl::VAOPrimitives::instance();
+  for(auto p : m_particles)
+  {
+      tx.setPosition(p.pos);
+      loadMatrixToShader(tx.getMatrix(), ngl::Vec4(0.0f, 1.0f, 0.0f, 1.0f));
+      prim->draw("sphere");
+  }
 
+}
+
+void NGLScene::timerEvent(QTimerEvent *_event)
+{
+    animateParticles();
+    update();
+}
+
+void NGLScene::animateParticles()
+{
+    for(auto& p : m_particles)
+    {
+        // set direction
+        auto direction = p.path[0] - p.pos;
+        direction.normalize();
+        // check for path stage completion
+        if(direction != p.dir)
+        {
+            p.pos = p.path[0];
+            p.path.erase(p.path.begin());
+            if(p.path.size() == 0)
+            {
+                continue;
+            }
+            direction = p.path[0] - p.pos;
+            direction.normalize();
+            p.dir = direction;
+        }
+        // set new pos
+        p.pos += direction * p.speed;
+    }
+    prune(); // cut off particles that have reached their goals
+}
+
+void NGLScene::prune()
+{
+    for(auto it = m_particles.begin(); it != m_particles.end();)
+    {
+        if( it->path.size() == 0 )
+        {
+            it = m_particles.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
 }
 
 void NGLScene::loadMatrixToShader(const ngl::Mat4 &_tx, const ngl::Vec4 &_color)

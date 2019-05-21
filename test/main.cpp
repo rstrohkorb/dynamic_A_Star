@@ -105,7 +105,8 @@ TEST(Graph, Astar)
     auto path = g.aStar(0, 15);
     EXPECT_TRUE(path.size() == 4);
     EXPECT_TRUE(path[0] == ngl::Vec3(1.0f, 1.0f, 0.0f));
-    EXPECT_TRUE(path[1] == ngl::Vec3(2.0f, 1.0f, 0.0f));
+    EXPECT_TRUE((path[1] == ngl::Vec3(2.0f, 1.0f, 0.0f)) ||
+                path[1] == ngl::Vec3(1.0f, 2.0f, 0.0f)); // takes a different path on mac v. linux. Same distance on grid so doesn't really matter.
     EXPECT_TRUE(path[2] == ngl::Vec3(2.0f, 2.0f, 0.0f));
     EXPECT_TRUE(path[3] == ngl::Vec3(3.0f, 3.0f, 0.0f));
     // remove some edges
