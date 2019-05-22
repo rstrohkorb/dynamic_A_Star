@@ -11,76 +11,10 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>ngl Qt Demo</string>
+   <string>A* Teapot Demo</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="s_mainWindowGridLayout">
-    <item row="1" column="1">
-     <widget class="QGroupBox" name="s_graphOptions">
-      <property name="title">
-       <string>Graph Options</string>
-      </property>
-      <layout class="QGridLayout" name="gridLayout_2">
-       <item row="0" column="0">
-        <widget class="QComboBox" name="m_graphSelection">
-         <item>
-          <property name="text">
-           <string>2D Grid</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>2D Random</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>3D Grid</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>3D Random</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QPushButton" name="m_resetGraph">
-         <property name="text">
-          <string>Reset Graph</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
-     </widget>
-    </item>
-    <item row="0" column="0">
-     <spacer name="horizontalSpacer">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>40</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
     <item row="0" column="1">
      <widget class="QGroupBox" name="s_simOptions">
       <property name="title">
@@ -104,6 +38,123 @@
       </layout>
      </widget>
     </item>
+    <item row="0" column="0" rowspan="5">
+     <spacer name="horizontalSpacer">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>40</width>
+        <height>40</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item row="2" column="1">
+     <widget class="QGroupBox" name="s_graphOptions">
+      <property name="title">
+       <string>Other Options</string>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="2" column="0">
+        <widget class="QCheckBox" name="m_visibleTeapot">
+         <property name="text">
+          <string>Teapot Visible</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Graph Type</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QComboBox" name="m_graphSelection">
+         <item>
+          <property name="text">
+           <string>2D Grid</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>2D Random</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>3D Grid</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>3D Random</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="3" column="0">
+        <widget class="QCheckBox" name="m_teapotEffectOn">
+         <property name="text">
+          <string>Teapot Color Effect</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="1" column="1">
+     <widget class="QGroupBox" name="s_particleOptions">
+      <property name="title">
+       <string>Particle Options</string>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_4">
+       <item row="2" column="0">
+        <widget class="QCheckBox" name="m_isRandomGoal">
+         <property name="text">
+          <string>Randomize Goal</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Number of Particles</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QSpinBox" name="m_numParticles">
+         <property name="value">
+          <number>10</number>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QPushButton" name="m_changeGoal">
+         <property name="text">
+          <string>Change Goal</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -112,7 +163,7 @@
      <x>0</x>
      <y>0</y>
      <width>972</width>
-     <height>22</height>
+     <height>25</height>
     </rect>
    </property>
   </widget>

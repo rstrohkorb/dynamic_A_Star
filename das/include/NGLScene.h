@@ -6,6 +6,7 @@
 #include <ngl/AbstractVAO.h>
 #include "WindowParams.h"
 #include "Graph.h"
+#include "ColorTeapot.h"
 #include <QEvent>
 #include <QResizeEvent>
 #include <QOpenGLWidget>
@@ -51,10 +52,17 @@ Q_OBJECT        // must include this if you use Qt signals/slots
 
 public slots :
     /// Functions for handling slots
+    /// Sim options
     void startSim();
     void stopSim();
+    /// Particle options
+    void setNumParticles(int _i);
+    void setRandomGoal(bool _isRandom);
+    void changeGoal();
+    /// other options
     void setGraphType(int _i);
-    void resetGraph();
+    void setTeapotVisible(bool _isVisible);
+    void setTeapotEffectToggle(bool _isOn);
 
 private:
 
@@ -102,13 +110,19 @@ private:
     // add a QT timer event
     void timerEvent(QTimerEvent *_event) override;
 
-    /// VAO
+    /// VAOs
     std::unique_ptr<ngl::AbstractVAO> m_lineVAO;
+    std::unique_ptr<ngl::AbstractVAO> m_teapotVAO;
     /// Graph
     Graph m_graph;
+    /// teapot
+    ColorTeapot m_teapot;
+    bool m_teapotVisible = false;
+    bool m_teapotEffectOn = false;
 
-    /// load matrix to shader
+    /// load matrix to shaders
     void loadMatrixToShader(const ngl::Mat4 &_tx, const ngl::Vec4 &_color);
+    void loadMatrixToTeapotShader(const ngl::Mat4 &_tx);
 
     /// private struct for the particle animation data
     struct Particle
@@ -130,12 +144,14 @@ private:
     bool m_visParticles = false;
     size_t m_numParticles = 10;
     size_t m_goal = 0;
+    bool m_isGoalRandom = false;
     /// particle handlers
     void spawn();
     void createParticle(size_t _goal);
     void animateParticles();
     void prune();
     void resetParticles();
+    void resetGoal(size_t _goal);
 
     /// graph construction methods
     void makeGraph_2Dgrid(ngl::Vec2 _bl, ngl::Vec2 _tr, size_t _h, size_t _w);

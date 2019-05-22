@@ -1,6 +1,7 @@
 TARGET=test
 SOURCES+= main.cpp \
-          ../das/src/Graph.cpp
+          ../das/src/Graph.cpp \
+          ../das/src/ColorTeapot.cpp
 #          ../clothSim/src/Cloth.cpp \
 
 LIBS+= -lgtest

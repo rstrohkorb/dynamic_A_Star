@@ -19,6 +19,7 @@ NGLScene::NGLScene(QWidget *_parent )
     // initialize member variables
     setGraphType(0);
     m_goal = m_graph.size() - 1;
+    m_teapot = ColorTeapot();
 }
 
 
@@ -56,17 +57,18 @@ void NGLScene::initializeGL()
   ngl::ShaderLib *shader = ngl::ShaderLib::instance();
   shader->loadShader("lineShader", "shaders/lineVertex.glsl",
                    "shaders/lineFragment.glsl");
+  shader->loadShader("teapotShader", "shaders/teapotVertex.glsl",
+                     "shaders/teapotFragment.glsl");
   //set the camera
-  m_view = ngl::lookAt({0.0f, 20.0f, 20.0f}, ngl::Vec3::zero(), ngl::Vec3::up());
+  m_view = ngl::lookAt({1.5f, 2.0f, 3.0f}, ngl::Vec3::zero(), ngl::Vec3::up());
 
-  //make a simple vao for the lines
+  //make a simple vao for the lines and the teapot
   m_lineVAO = ngl::VAOFactory::createVAO(ngl::simpleVAO, GL_LINES);
+  m_teapotVAO = ngl::VAOFactory::createVAO(ngl::simpleVAO, GL_TRIANGLES);
 
   //make a primitive sphere
-  ngl::VAOPrimitives::instance()->createSphere("sphere", 0.3f, 40);
+  ngl::VAOPrimitives::instance()->createSphere("sphere", 0.03f, 40);
 }
-
-
 
 void NGLScene::paintGL()
 {
@@ -98,16 +100,69 @@ void NGLScene::paintGL()
       auto *prim = ngl::VAOPrimitives::instance();
       for(auto p : m_particles)
       {
+          ngl::Vec4 particleColor;
+          if(m_teapotEffectOn)
+          {
+              particleColor = p.pos;
+          }
+          else
+          {
+              particleColor = ngl::Vec4(0.0f, 1.0f, 0.0f, 1.0f);
+          }
           tx.setPosition(p.pos);
-          loadMatrixToShader(mouseRotation * tx.getMatrix(), ngl::Vec4(0.0f, 1.0f, 0.0f, 1.0f));
+          loadMatrixToShader(mouseRotation * tx.getMatrix(), particleColor);
           prim->draw("sphere");
       }
+  }
+  if(m_teapotVisible)
+  {
+      std::vector<ngl::Vec3> teapotRender;
+      std::vector<ngl::Vec3> colorList;
+      // create teapot list
+      if(m_teapotEffectOn)
+      {
+          //grab particle positions
+          for(auto p : m_particles)
+          {
+              colorList.push_back(p.pos);
+          }
+      }
+      else
+      {
+          colorList.push_back(ngl::Vec3(1.0f, 0.0f, 0.0f));
+      }
+      teapotRender = m_teapot.render(colorList);
+      // teapot transformation matrix
+      ngl::Transformation tx;
+      tx.setPosition(ngl::Vec3(-1.0f, -1.0f, 0.0f));
+      //tx.setScale(ngl::Vec3(0.7f));
+      //render out the teapot
+      m_teapotVAO->bind();
+      m_teapotVAO->setData(ngl::SimpleVAO::VertexData(teapotRender.size()*sizeof(ngl::Vec3),
+                                                      teapotRender[0].m_x));
+      m_teapotVAO->setVertexAttributePointer(0, 3, GL_FLOAT, 2*sizeof(ngl::Vec3), 0);
+      m_teapotVAO->setVertexAttributePointer(1, 3, GL_FLOAT, 2*sizeof(ngl::Vec3), 3);
+      m_teapotVAO->setNumIndices(teapotRender.size()/2);
+      loadMatrixToTeapotShader(mouseRotation * tx.getMatrix());
+      m_teapotVAO->draw();
+      m_teapotVAO->unbind();
   }
 }
 
 void NGLScene::timerEvent(QTimerEvent *_event)
 {
     m_timerId = _event->timerId();
+    // goal change chance
+    if(m_isGoalRandom)
+    {
+        ngl::Random *rng = ngl::Random::instance();
+        if(rng->randomPositiveNumber() < 0.01f)
+        {
+            size_t newGoal = static_cast<size_t>(rng->randomPositiveNumber(m_graph.size()-1));
+            resetGoal(newGoal);
+        }
+    }
+    // particle animations
     animateParticles();
     update();
 }
@@ -128,11 +183,16 @@ void NGLScene::spawn()
 
 void NGLScene::createParticle(size_t _goal)
 {
-    // handle random start/goal
+    // handle random start
     ngl::Random *rng = ngl::Random::instance();
     size_t start = static_cast<size_t>(rng->randomPositiveNumber(m_graph.size()-1));
+    // don't allow start == goal
+    while(start == _goal)
+    {
+        start = static_cast<size_t>(rng->randomPositiveNumber(m_graph.size()-1));
+    }
     // create a particle and load it up
-    Particle p(m_graph.pos(start), m_graph.pos(_goal), 0.05f);
+    Particle p(m_graph.pos(start), m_graph.pos(_goal), 0.005f);
     p.path = m_graph.aStar(start, _goal);
     auto direction = p.path[0] - p.pos;
     direction.normalize();
@@ -188,12 +248,34 @@ void NGLScene::resetParticles()
     spawn();
 }
 
+void NGLScene::resetGoal(size_t _goal)
+{
+    m_goal = _goal;
+    // reset the particles to the new goal
+    for(auto& p : m_particles)
+    {
+        p.goal = _goal;
+        auto nextPos = p.path[0];
+        auto startNode = m_graph.node(nextPos);
+        auto newPath = m_graph.aStar(startNode, _goal);
+        newPath.insert(newPath.begin(), nextPos);
+        p.path = newPath;
+    }
+}
+
 void NGLScene::loadMatrixToShader(const ngl::Mat4 &_tx, const ngl::Vec4 &_color)
 {
     ngl::ShaderLib *shader = ngl::ShaderLib::instance();
     shader->use("lineShader");
     shader->setUniform("MVP", m_project * m_view * _tx);
     shader->setUniform("vertColor", _color);
+}
+
+void NGLScene::loadMatrixToTeapotShader(const ngl::Mat4 &_tx)
+{
+    ngl::ShaderLib *shader = ngl::ShaderLib::instance();
+    shader->use("teapotShader");
+    shader->setUniform("MVP", m_project * m_view * _tx);
 }
 
 void NGLScene::makeGraph_2Dgrid(ngl::Vec2 _bl, ngl::Vec2 _tr, size_t _h, size_t _w)
@@ -243,14 +325,25 @@ void NGLScene::makeGraph_2Drand(ngl::Vec2 _bl, ngl::Vec2 _tr, size_t _n, size_t 
     ngl::Random *rng = ngl::Random::instance();
     std::vector<ngl::Vec3> points;
     points.reserve(_n);
-    // determine point range
-    auto xrange = abs(_tr.m_x - _bl.m_x)/2.0f;
-    auto yrange = abs(_tr.m_y - _bl.m_y)/2.0f;
-    // allocate points randomly
-    for(size_t i = 0; i < _n; ++i)
+    if(_bl == ngl::Vec2(0.0f, 0.0f) && _tr == ngl::Vec2(1.0f, 1.0f))
     {
-        auto p = rng->getRandomPoint(xrange, yrange, 0.0f) + ngl::Vec3(_bl.m_x, _bl.m_y, 0.0f);
-        points.push_back(p);
+        // allocate points randomly
+        for(size_t i = 0; i < _n; ++i)
+        {
+            points.push_back(ngl::Vec3(rng->randomPositiveNumber(), rng->randomPositiveNumber(), 0.0f));
+        }
+    }
+    else
+    {
+        // determine point range
+        auto xrange = abs(_tr.m_x - _bl.m_x)/2.0f;
+        auto yrange = abs(_tr.m_y - _bl.m_y)/2.0f;
+        // allocate points randomly
+        for(size_t i = 0; i < _n; ++i)
+        {
+            auto p = rng->getRandomPoint(xrange, yrange, 0.0f);
+            points.push_back(p);
+        }
     }
     m_graph = Graph(points, _degree);
     resetParticles();
@@ -261,15 +354,26 @@ void NGLScene::makeGraph_3Drand(ngl::Vec3 _bl, ngl::Vec3 _tr, size_t _n, size_t 
     ngl::Random *rng = ngl::Random::instance();
     std::vector<ngl::Vec3> points;
     points.reserve(_n);
-    // determine point range
-    auto xrange = abs(_tr.m_x - _bl.m_x)/2.0f;
-    auto yrange = abs(_tr.m_y - _bl.m_y)/2.0f;
-    auto zrange = abs(_tr.m_z - _bl.m_z)/2.0f;
-    // allocate points randomly
-    for(size_t i = 0; i < _n; ++i)
+    if(_bl == ngl::Vec3(0.0f) && _tr == ngl::Vec3(1.0f))
     {
-        auto p = rng->getRandomPoint(xrange, yrange, zrange) + _bl;
-        points.push_back(p);
+        //allocate points randomly
+        for(size_t i = 0; i < _n; ++i)
+        {
+            points.push_back(ngl::Vec3(rng->randomPositiveNumber(), rng->randomPositiveNumber(), rng->randomPositiveNumber()));
+        }
+    }
+    else
+    {
+        // determine point range
+        auto xrange = abs(_tr.m_x - _bl.m_x)/2.0f;
+        auto yrange = abs(_tr.m_y - _bl.m_y)/2.0f;
+        auto zrange = abs(_tr.m_z - _bl.m_z)/2.0f;
+        // allocate points randomly
+        for(size_t i = 0; i < _n; ++i)
+        {
+            auto p = rng->getRandomPoint(xrange, yrange, zrange);
+            points.push_back(p);
+        }
     }
     m_graph = Graph(points, _degree);
     resetParticles();
@@ -308,32 +412,54 @@ void NGLScene::startSim()
 
 void NGLScene::stopSim()
 {
+    m_visParticles = false;
     killTimer(m_timerId);
+}
+
+void NGLScene::setNumParticles(int _i)
+{
+    m_numParticles = static_cast<size_t>(_i);
+}
+
+void NGLScene::setRandomGoal(bool _isRandom)
+{
+    m_isGoalRandom = _isRandom;
+}
+
+void NGLScene::changeGoal()
+{
+    ngl::Random *rng = ngl::Random::instance();
+    size_t newGoal = static_cast<size_t>(rng->randomPositiveNumber(m_graph.size()-1));
+    resetGoal(newGoal);
 }
 
 void NGLScene::setGraphType(int _i)
 {
-    // timer shouldn't be going while we switch graph types, turn off particles
-    killTimer(m_timerId);
-    m_visParticles = false;
     // switch graph types
     switch(_i)
     {
     case 0:
-        makeGraph_2Dgrid(ngl::Vec2(-5.0f, -5.0f), ngl::Vec2(5.0f, 5.0f), 10, 10); break;
+        makeGraph_2Dgrid(ngl::Vec2(0.0f, 0.0f), ngl::Vec2(1.0f, 1.0f), 10, 10); break;
     case 1:
-        makeGraph_2Drand(ngl::Vec2(-5.0f, -5.0f), ngl::Vec2(5.0f, 5.0f), 100, 3); break;
+        makeGraph_2Drand(ngl::Vec2(0.0f, 0.0f), ngl::Vec2(1.0f, 1.0f), 100, 3); break;
     case 2:
-        makeGraph_3Dgrid(ngl::Vec3(-5.0f), ngl::Vec3(5.0f), 10, 10, 10); break;
+        makeGraph_3Dgrid(ngl::Vec3(0.0f), ngl::Vec3(1.0f), 10, 10, 10); break;
     case 3:
-        makeGraph_3Drand(ngl::Vec3(-5.0f), ngl::Vec3(5.0f), 300, 3); break;
+        makeGraph_3Drand(ngl::Vec3(0.0f), ngl::Vec3(1.0f), 300, 3); break;
     default: break;
     }
     // update gl window and redraw
     update();
 }
 
-void NGLScene::resetGraph()
+void NGLScene::setTeapotVisible(bool _isVisible)
 {
-    // probably going to delete this
+    m_teapotVisible = _isVisible;
+    update();
+}
+
+void NGLScene::setTeapotEffectToggle(bool _isOn)
+{
+    m_teapotEffectOn = _isOn;
+    update();
 }

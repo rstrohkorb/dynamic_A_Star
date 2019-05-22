@@ -30,8 +30,13 @@ Graph::Graph(std::vector<ngl::Vec3> _points, size_t _degree) : m_degree(_degree)
         // locate sorted element and store - skip first one, that's us
         for(size_t wi = 1; wi < m_degree + 1; ++wi)
         {
-            Edge e(find_index(weights, sorted_weights[wi], m_graph[n].edgeId()), sorted_weights[wi]);
-            m_graph[n].es.push_back(e);
+            // protect against out of index
+            auto ind = find_index(weights, sorted_weights[wi], m_graph[n].edgeId());
+            if(ind != m_graph.size())
+            {
+                Edge e(ind, sorted_weights[wi]);
+                m_graph[n].es.push_back(e);
+            }
         }
     }
     // now add reverse edges to make sure we're all bidirectional in this graph
@@ -50,6 +55,18 @@ Graph::Graph(std::vector<ngl::Vec3> _points, size_t _degree) : m_degree(_degree)
             }
         }
     }
+}
+
+size_t Graph::node(const ngl::Vec3 _pos) const
+{
+    for(size_t i = 0; i < m_graph.size(); ++i)
+    {
+        if(_pos == m_graph[i].p)
+        {
+            return i;
+        }
+    }
+    return m_graph.size(); //returns out of index if not found
 }
 
 std::vector<size_t> Graph::edges(const size_t _node) const

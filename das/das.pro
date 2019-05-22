@@ -12,12 +12,15 @@ SOURCES+=src/main.cpp \
          src/NGLScene.cpp \
          src/Graph.cpp \
          src/NGLSceneMouseControls.cpp \
-         src/MainWindow.cpp
+         src/MainWindow.cpp \
+         src/ColorTeapot.cpp
 
 HEADERS+= include/NGLScene.h \
           include/WindowParams.h \
           include/Graph.h \
-          include/MainWindow.h
+          include/MainWindow.h \
+          include/ColorTeapot.h \
+          include/teapot.h
 
 OTHER_FILES+= shaders/*.glsl
 

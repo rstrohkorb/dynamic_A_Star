@@ -8,14 +8,19 @@ MainWindow::MainWindow(QWidget *parent) :QMainWindow(parent), m_ui(new Ui::MainW
   m_gl=new  NGLScene(this);
 
   // gl widget
-  m_ui->s_mainWindowGridLayout->addWidget(m_gl,0,0,2,1);
+  m_ui->s_mainWindowGridLayout->addWidget(m_gl,0,0,3,1);
   // connect up slots
   // SIM OPTIONS
   connect(m_ui->m_startSim, SIGNAL(clicked()), m_gl, SLOT(startSim()));
   connect(m_ui->m_stopSim, SIGNAL(clicked()), m_gl, SLOT(stopSim()));
-  // GRAPH OPTIONS
+  // PARTICLE OPTIONS
+  connect(m_ui->m_numParticles, SIGNAL(valueChanged(int)), m_gl, SLOT(setNumParticles(int)));
+  connect(m_ui->m_isRandomGoal, SIGNAL(toggled(bool)), m_gl, SLOT(setRandomGoal(bool)));
+  connect(m_ui->m_changeGoal, SIGNAL(clicked()), m_gl, SLOT(changeGoal()));
+  // OTHER OPTIONS
   connect(m_ui->m_graphSelection, SIGNAL(currentIndexChanged(int)), m_gl, SLOT(setGraphType(int)));
-  connect(m_ui->m_resetGraph, SIGNAL(clicked()), m_gl, SLOT(resetGraph()));
+  connect(m_ui->m_visibleTeapot, SIGNAL(toggled(bool)), m_gl, SLOT(setTeapotVisible(bool)));
+  connect(m_ui->m_teapotEffectOn, SIGNAL(toggled(bool)), m_gl, SLOT(setTeapotEffectToggle(bool)));
 
 //  connect(m_ui->m_wireframe,SIGNAL(toggled(bool)),m_gl,SLOT(toggleWireframe(bool)));
 //  // set the rotation signals

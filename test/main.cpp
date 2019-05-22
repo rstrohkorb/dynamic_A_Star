@@ -2,8 +2,10 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include <ngl/Vec3.h>
+#include <ngl/NGLInit.h>
 
 #include "Graph.h"
+#include "ColorTeapot.h"
 
 int main(int argc, char **argv)
 {
@@ -123,4 +125,21 @@ TEST(Graph, Astar)
     EXPECT_TRUE(path2[2] == ngl::Vec3(3.0f, 1.0f, 0.0f));
     EXPECT_TRUE(path2[3] == ngl::Vec3(3.0f, 2.0f, 0.0f));
     EXPECT_TRUE(path2[4] == ngl::Vec3(3.0f, 3.0f, 0.0f));
+}
+
+TEST(ColorTeapot, defaultctor)
+{
+    ColorTeapot ct;
+    EXPECT_TRUE(ct.numTris() == 5346 * 3);
+}
+
+TEST(ColorTeapot, render)
+{
+    ColorTeapot ct;
+    std::vector<ngl::Vec3> colors;
+    colors.push_back(ngl::Vec3(0.0f));
+    colors.push_back(ngl::Vec3(1.0f));
+    colors.push_back(ngl::Vec3(1.0f, 0.0f, 1.0f));
+    auto renderlist = ct.render(colors);
+    EXPECT_TRUE(renderlist.size() == 5346*2*3);
 }
