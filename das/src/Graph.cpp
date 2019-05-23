@@ -27,16 +27,20 @@ Graph::Graph(std::vector<ngl::Vec3> _points, size_t _degree) : m_degree(_degree)
         // copy to another list and sort
         std::vector<float> sorted_weights(weights);
         std::sort(sorted_weights.begin(), sorted_weights.end());
-        // locate sorted element and store - skip first one, that's us
-        for(size_t wi = 1; wi < m_degree + 1; ++wi)
+        // locate sorted element and store as edge - go up to degree
+        size_t edges_stored = 0;
+        size_t index = 0;
+        while((edges_stored < m_degree) && (index < sorted_weights.size()))
         {
             // protect against out of index
-            auto ind = find_index(weights, sorted_weights[wi], m_graph[n].edgeId());
-            if(ind != m_graph.size())
+            auto edgeNode = find_index(weights, sorted_weights[index], m_graph[n].edgeId());
+            if((edgeNode != m_graph.size()) && (edgeNode != n))
             {
-                Edge e(ind, sorted_weights[wi]);
+                Edge e(edgeNode, sorted_weights[index]);
                 m_graph[n].es.push_back(e);
+                ++edges_stored;
             }
+            ++index;
         }
     }
     // now add reverse edges to make sure we're all bidirectional in this graph
@@ -181,7 +185,7 @@ std::vector<ngl::Vec3> Graph::aStar(size_t _self, size_t _goal)
         }
     }
 
-    // we should never reach this line
+    // we should never reach this line unless the graph contains a closed system
     return reconstructPath(cameFrom, _goal);
 }
 

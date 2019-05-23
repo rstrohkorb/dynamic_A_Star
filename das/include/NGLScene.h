@@ -151,7 +151,8 @@ private:
     void animateParticles();
     void prune();
     void resetParticles();
-    void resetGoal(size_t _goal);
+    void resetParticleGoal();
+    void randomGoal();
 
     /// graph construction methods
     void makeGraph_2Dgrid(ngl::Vec2 _bl, ngl::Vec2 _tr, size_t _h, size_t _w);
